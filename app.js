@@ -3,7 +3,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const date = require(__dirname + "/date.js");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const res = require("express/lib/response");
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.static("public"));
 const url = "mongodb://127.0.0.1:27017/"
 const dbName = "todolistDB"
 // console.log(`${url}${dbName}`);
+
 mongoose.connect(`${url}${dbName}`)
 
 const itemSchema = {
@@ -40,30 +42,33 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3]
 
-// Item.insertMany(defaultItems)
+
 console.log("successfully saved default database");
 
 
-app.get("/", function(req, res) {
+app.get("/", async function (req, res) {
+  const data = await Item.find({})
 
-  res.render("list", {
-    listTitle: "Today",
-    newListItems: items
-  });
-
+  if (data.length === 0) {
+    Item.insertMany(defaultItems)
+    res.redirect("/")
+  } else {
+    res.render("list", {
+      listTitle: "Today",
+      newListItems: data
+    })
+  }
 });
 
 app.post("/", function(req, res){
 
-  const item = req.body.newItem;
+  const itemName = req.body.newItem;
 
-  if (req.body.list === "Work") {
-    workItems.push(item);
-    res.redirect("/work");
-  } else {
-    items.push(item);
-    res.redirect("/");
-  }
+  const item = new Item({
+    name:itemName
+  })
+  item.save()
+  res.redirect("/")
 });
 
 app.get("/work", function(req,res){
