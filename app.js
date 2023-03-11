@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const date = require(__dirname + "/date.js");
 const mongoose = require("mongoose");
 const res = require("express/lib/response");
+const { redirect } = require("express/lib/response");
 
 const app = express();
 
@@ -42,15 +43,23 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3]
 
+const listSchema = {
+  name: String,
+  items: [itemSchema]
+}
 
-console.log("successfully saved default database");
-
+const List = mongoose.model(
+  "List",
+  listSchema
+)
 
 app.get("/", async function (req, res) {
   const data = await Item.find({})
 
   if (data.length === 0) {
     Item.insertMany(defaultItems)
+    
+  console.log("successfully saved default database");
     res.redirect("/")
   } else {
     res.render("list", {
@@ -59,6 +68,23 @@ app.get("/", async function (req, res) {
     })
   }
 });
+
+app.get("/:customListName", async (req, res) => {
+  const customListName = req.params.customListName
+  console.log(customListName);
+
+
+  const list = new List({
+    name: customListName,
+    items: defaultItems
+  })
+  console.log(mongoose.connection.readyState)
+  console.log(list);
+
+  
+  // console.log(`${list.save()} is saved`);
+  // console.log(`${list.save()} is saved tod atabasae list`);
+})
 
 app.post("/", function(req, res){
 
@@ -70,6 +96,13 @@ app.post("/", function(req, res){
   item.save()
   res.redirect("/")
 });
+
+app.post("/delete", async (req, res) => {
+  const checkedItemId = req.body.checkbox
+  const deleteItem = await Item.findByIdAndRemove(checkedItemId)
+  console.log(`${deleteItem.name} is deleted`);
+  res.redirect("/")
+})
 
 app.get("/work", function(req,res){
   res.render("list", {listTitle: "Work List", newListItems: workItems});
