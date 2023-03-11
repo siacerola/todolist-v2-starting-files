@@ -6,6 +6,7 @@ const date = require(__dirname + "/date.js");
 const mongoose = require("mongoose");
 const res = require("express/lib/response");
 const { redirect } = require("express/lib/response");
+const _ = require("lodash")
 
 const app = express();
 
@@ -69,39 +70,82 @@ app.get("/", async function (req, res) {
   }
 });
 
-app.get("/:customListName", async (req, res) => {
-  const customListName = req.params.customListName
-  console.log(customListName);
+app.get("/:customListName",async (req, res) => {
+  const customListName = _.capitalize(req.params.customListName)
 
+  const compareList = await List.findOne({ name: customListName })
+  if (compareList != null) {
+    // show existing list
+    res.render("list", {
+      listTitle: compareList.name,
+      newListItems:compareList.items
+    })
+  } else {
+    // create a new list
+    const list = new List({
+      name: customListName,
+      items: defaultItems
+    })
+    
+    list.save()
 
-  const list = new List({
-    name: customListName,
-    items: defaultItems
-  })
-  console.log(mongoose.connection.readyState)
-  console.log(list);
+    res.redirect(`/${customListName}`)
 
-  
-  // console.log(`${list.save()} is saved`);
-  // console.log(`${list.save()} is saved tod atabasae list`);
+  }
+
 })
 
-app.post("/", function(req, res){
+app.post("/", async function(req, res){
 
   const itemName = req.body.newItem;
+  const listName = req.body.list
 
   const item = new Item({
     name:itemName
   })
-  item.save()
-  res.redirect("/")
+
+  console.log(listName);
+  if (listName === "Today") {
+    item.save()
+    res.redirect("/")
+  } else {
+    const findList = await List.findOne(
+      {name:listName}
+    )
+    console.log(findList);
+    findList.items.push(item)
+    findList.save()
+    res.redirect(`/${listName}`)
+  }
+
+
+  
 });
 
 app.post("/delete", async (req, res) => {
   const checkedItemId = req.body.checkbox
-  const deleteItem = await Item.findByIdAndRemove(checkedItemId)
-  console.log(`${deleteItem.name} is deleted`);
-  res.redirect("/")
+  const listName = req.body.listName
+
+  if (listName === "Today") {
+    const deleteItem = await Item.findByIdAndRemove(checkedItemId)
+    console.log(`${deleteItem.name} is deleted`);
+    res.redirect("/")
+  } else {
+    const updateItem = await List.findOneAndUpdate(
+      { name: listName },
+      {
+        $pull:
+        {
+          items:
+          {_id:checkedItemId}
+        }
+      }
+    )
+
+    console.log(`${updateItem} deleted`);
+    res.redirect(`/${listName}`)
+  }
+  
 })
 
 app.get("/work", function(req,res){
