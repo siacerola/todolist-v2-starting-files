@@ -16,11 +16,22 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 const url = "mongodb://127.0.0.1:27017/"
-const urlAtlas="mongodb+srv://sihar:HtcvdoVxADwcbSOY@cluster0.cwxk3fs.mongodb.net/?retryWrites=true&w=majority"
+const urlAtlas="mongodb+srv://sihar:HtcvdoVxADwcbSOY@cluster0.cwxk3fs.mongodb.net/"
 const dbName = "todolistDB"
 // console.log(`${url}${dbName}`);
 
-mongoose.connect(`${urlAtlas}/${dbName}`)
+// mongoose.connect(`${urlAtlas}`)
+
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(`${urlAtlas}${dbName}`)
+    console.log(`mongodb connected : ${conn.connection.host}`);
+  } catch (error) {
+    console.log(error);
+    process.exit(1)
+  }
+}
+
 
 const itemSchema = {
   name:String
@@ -157,6 +168,10 @@ app.get("/about", function(req, res){
   res.render("about");
 });
 
-app.listen(3000, function() {
-  console.log("Server started on port 3000");
-});
+
+connectDB().then(() => {
+  app.listen(3000, function() {
+    console.log("Server started on port 3000");
+  });
+})
+
