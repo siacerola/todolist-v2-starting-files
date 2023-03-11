@@ -16,10 +16,11 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 const url = "mongodb://127.0.0.1:27017/"
+const urlAtlas="mongodb+srv://sihar:HtcvdoVxADwcbSOY@cluster0.cwxk3fs.mongodb.net/?retryWrites=true&w=majority"
 const dbName = "todolistDB"
 // console.log(`${url}${dbName}`);
 
-mongoose.connect(`${url}${dbName}`)
+mongoose.connect(`${urlAtlas}/${dbName}`)
 
 const itemSchema = {
   name:String
