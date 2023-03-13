@@ -2,20 +2,21 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const date = require(__dirname + "/date.js");
+// const date = require(__dirname + "/date.js");
 const mongoose = require("mongoose");
-const res = require("express/lib/response");
-const { redirect } = require("express/lib/response");
+// const res = require("express/lib/response");
+// const { redirect } = require("express/lib/response");
 const _ = require("lodash")
 
 const app = express();
+const PORT = process.env.PORT || 3000
 
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-const url = "mongodb://127.0.0.1:27017/"
+// const url = "mongodb://127.0.0.1:27017/"
 const urlAtlas="mongodb+srv://sihar:HtcvdoVxADwcbSOY@cluster0.cwxk3fs.mongodb.net/"
 const dbName = "todolistDB"
 // console.log(`${url}${dbName}`);
@@ -24,7 +25,8 @@ const dbName = "todolistDB"
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(`${urlAtlas}${dbName}`)
+    // const conn = await mongoose.connect(`${urlAtlas}${dbName}`)
+    const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`mongodb connected : ${conn.connection.host}`);
   } catch (error) {
     console.log(error);
@@ -170,8 +172,8 @@ app.get("/about", function(req, res){
 
 
 connectDB().then(() => {
-  app.listen(3000, function() {
-    console.log("Server started on port 3000");
+  app.listen(PORT, function() {
+    console.log(`listening for requests ${PORT}`);
   });
 })
 
